@@ -3,7 +3,7 @@ from os import listdir
 from os.path import isfile, join
 import matplotlib.pyplot as plt
 import re
-
+from utils import merge_sort
 months = {
     'January': 31,
     'February': 29,
@@ -39,6 +39,7 @@ for file in onlyfiles:
                 if month == date[1]:
                     break
                 date_number += days
+            date_number += int(date[2]) * 365 + int(date[2])//4
             if last_date_number != date_number:
                 dates.append(last_date_number)
                 messages.append(message)
@@ -48,13 +49,22 @@ for file in onlyfiles:
             message += 1
 dates.append(last_date_number)
 messages.append(message)
+dates = dates[1:]
+messages = messages[1:]
+for date in range (min(dates)+1,max(dates)):
+    if date not in dates:
+        dates.append(date)
+        messages.append(0)
+merge_sort(dates,0,len(dates)-1,messages)
+dates = list(map(lambda date: date-dates[0],dates))
+
 print(dates)
 print(messages)
 plt.figure()
-plt.plot(dates[1:], messages[1:], 'b')
-plt.xlim(120, 270)
-plt.xlabel("Which day of the 2020")
+plt.plot(dates, messages, 'b')
+plt.xlim(dates[0], dates[-1])
+plt.xlabel("Day Number(Origin=First message)")
 plt.ylabel("Number of messages")
 plt.title(
-    f"Sheikh and Neikh chatting diagram all time\nTotal messages: {sum(messages)}")
+    f"Total messages: {sum(messages)}")
 plt.show()
