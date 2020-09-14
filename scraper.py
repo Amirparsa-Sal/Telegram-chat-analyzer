@@ -8,25 +8,49 @@ import codecs
 from utils import merge_sort
 import numpy as np
 from PIL import Image
-
-months = {
-    'January': 31,
-    'February': 29,
-    'March': 31,
-    'April': 30,
-    'May': 31,
-    'June': 30,
-    'July': 31,
-    'August': 31,
-    'September': 30,
-    'October': 31,
-    'November': 30
-}
+import functools
 # finding html files
-onlyfiles = [f for f in listdir(".") if (
+from tkinter import filedialog
+from tkinter import *
+
+window = Tk()
+window.withdraw()
+folder_selected = filedialog.askdirectory()
+onlyfiles = [f for f in listdir(folder_selected) if (
     isfile(join(".", f)) and f.split(".")[-1] == 'html')]
 
+if len(onlyfiles) == 0:
+    print("There is no html file here!")
+    exit(-1)
+else:
+    print("Processing...")
+
+def find_date_number(date):
+    day = int(date[0])
+    year = int(date[2]) 
+    months = {
+        'January': 31,
+        'February': 28 + int(year%4==0),
+        'March': 31,
+        'April': 30,
+        'May': 31,
+        'June': 30,
+        'July': 31,
+        'August': 31,
+        'September': 30,
+        'October': 31,
+        'November': 30
+    }
+    date_number = 0
+    for month, days in months.items():
+        if month == date[1]:
+            break
+        date_number += days
+    date_number += day + year * 365 + year//4
+    return date_number
+
 def show_chat_diagram():
+    months = ['January','February','March','April','May','June','July','August','September','October','November']
     # finding messages
     last_date_number = 0
     message = 0
@@ -40,13 +64,9 @@ def show_chat_diagram():
                 date = div.find('div').text
                 date = date.replace('\n', '')
                 date = date.split(" ")
-                if date[1] in months.keys():
-                    date_number = int(date[0])
-                    for month, days in months.items():
-                        if month == date[1]:
-                            break
-                        date_number += days
-                    date_number += int(date[2]) * 365 + int(date[2])//4
+                #finding day_number
+                if date[1] in months:
+                    date_number = find_date_number(date)
                     if last_date_number != date_number:
                         if last_date_number not in dates:
                             dates.append(last_date_number)
@@ -68,18 +88,17 @@ def show_chat_diagram():
             messages.append(0)
     merge_sort(dates,0,len(dates)-1,messages)
     dates = list(map(lambda date: date-dates[0],dates))
-
-    print(dates)
-    print(messages)
+    for i in range(1,len(messages)):
+        messages[i] += messages[i-1]
     plt.figure()
     plt.plot(dates, messages, 'b')
     plt.xlim(dates[0], dates[-1])
     plt.xlabel("Day Number(Origin=First message)")
-    plt.ylabel("Number of messages")
+    plt.ylabel("Total messages until that day")
     plt.title(
-        f"Total messages: {sum(messages)}")
+        f"Total messages: {messages[-1]}")
+    plt.savefig("Diagram.png")
     plt.show()
-
 def delete_extra_characters(text):
     weridPatterns = re.compile("["
                                u"\U0001F600-\U0001F64F"  # emoticons
