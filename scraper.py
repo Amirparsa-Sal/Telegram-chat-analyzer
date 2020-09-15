@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+import os
 from os import listdir
 from os.path import isfile, join
 import matplotlib.pyplot as plt
@@ -10,20 +11,20 @@ import numpy as np
 from PIL import Image
 import functools
 # finding html files
-from tkinter import filedialog
-from tkinter import *
+from tkinter import filedialog,Tk
 
 window = Tk()
 window.withdraw()
-folder_selected = filedialog.askdirectory()
-onlyfiles = [f for f in listdir(folder_selected) if (
-    isfile(join(".", f)) and f.split(".")[-1] == 'html')]
+DIRECTORY = filedialog.askdirectory()
+print(listdir(DIRECTORY))
+onlyfiles = [f for f in listdir(DIRECTORY) if (
+    isfile(join(DIRECTORY, f)) and f.split(".")[-1] == 'html')]
+
+window.destroy()
 
 if len(onlyfiles) == 0:
     print("There is no html file here!")
     exit(-1)
-else:
-    print("Processing...")
 
 def find_date_number(date):
     day = int(date[0])
@@ -56,8 +57,9 @@ def show_chat_diagram():
     message = 0
     dates = []
     messages = []
+    print("Scanning messages...")
     for file in onlyfiles:
-        soup = BeautifulSoup(open(file), 'html.parser')
+        soup = BeautifulSoup(open(os.path.join(DIRECTORY,file)), 'html.parser')
         divs = soup.find_all('div')
         for div in divs:
             if div['class'] == ['message', 'service']:
@@ -78,6 +80,7 @@ def show_chat_diagram():
                         last_date_number = date_number
             if div['class'] == ['message', 'default', 'clearfix', 'joined'] or div['class'] == ['message', 'default', 'clearfix']:
                 message += 1
+    print("Sorting data...")
     dates.append(last_date_number)
     messages.append(message)
     dates = dates[1:]
@@ -88,6 +91,7 @@ def show_chat_diagram():
             messages.append(0)
     merge_sort(dates,0,len(dates)-1,messages)
     dates = list(map(lambda date: date-dates[0],dates))
+    print("Almost done...")
     for i in range(1,len(messages)):
         messages[i] += messages[i-1]
     plt.figure()
@@ -97,7 +101,7 @@ def show_chat_diagram():
     plt.ylabel("Total messages until that day")
     plt.title(
         f"Total messages: {messages[-1]}")
-    plt.savefig("Diagram.png")
+    plt.savefig(os.path.join(DIRECTORY,'Diagram.png'))
     plt.show()
 def delete_extra_characters(text):
     weridPatterns = re.compile("["
@@ -126,7 +130,11 @@ def delete_extra_characters(text):
     return weridPatterns.sub(r'', text)
 
 def show_chat_word_cloud():
-    with codecs.open("chats.txt",'r',encoding='utf8') as file:
+    print("Start storing chat data...")
+    save_chats()
+    print("Chat data stored...")
+    with codecs.open(os.path.join(DIRECTORY,'chats.txt'),'r',encoding='utf8') as file:
+        print("Start putting words in picture")
         mask_array = np.array(Image.open("telegram.png"))
         wordcloud = WordCloudFa(persian_normalize=True,mask=mask_array)
         wordcloud.add_stop_words(['ama','ba','ta','ra','ro','az','dar','va','ke','be','mn','man','vali','ye','من','یه'])
@@ -134,16 +142,27 @@ def show_chat_word_cloud():
         wc = wordcloud.generate(text)
         image = wc.to_image()
         image.show()
-        image.save('wordcloud.png')
+        image.save(os.path.join(DIRECTORY,'wordcloud.png'))
 
 def save_chats():
-    with codecs.open("chats.txt",'a') as exp_file:
+    with codecs.open(os.path.join(DIRECTORY,'chats.txt'),'w') as exp_file:
+        exp_file.write("")
+    with codecs.open(os.path.join(DIRECTORY,'chats.txt'),'a') as exp_file:
         for file in onlyfiles:
-            soup = BeautifulSoup(open(file), 'html.parser')
+            soup = BeautifulSoup(open(os.path.join(DIRECTORY,file)), 'html.parser')
             divs = soup.find_all('div')
             for div in divs:
                 if div['class'] == ['text']:
                     exp_file.write(div.text + "\n")
-# save_chats()
-# show_chat_word_cloud()
-show_chat_diagram()
+
+print("Select a number\n1)Word Cloud\n2)Chat Diagram")
+n = int(input())
+if n==1:
+    print("Start making word cloud...")
+    show_chat_word_cloud()
+    print("The word cloud is ready!")
+elif n==2:
+    print("Start making diagram...")
+    show_chat_diagram()
+    print("The diagram is ready!")
+exit(0)
