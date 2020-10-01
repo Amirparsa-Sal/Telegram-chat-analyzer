@@ -30,7 +30,7 @@ if len(onlyfiles) == 0:
     exit(-1)
 
 def get_chat_data_html(dir,onlyfiles):
-    months = ['January','February','March','April','May','June','July','August','September','October','November']
+    months = ['January','February','March','April','May','June','July','August','September','October','November','December']
     # finding messages
     last_date_number = 0
     message = 0
@@ -67,7 +67,7 @@ def get_chat_data_html(dir,onlyfiles):
     return (dates,messages)
 
 def get_chat_data_json(dir,onlyfiles):
-    months = ['January','February','March','April','May','June','July','August','September','October','November']
+    months = ['January','February','March','April','May','June','July','August','September','October','November','December']
     # finding messages
     last_date_number = 0
     message_num = 0
@@ -82,6 +82,9 @@ def get_chat_data_json(dir,onlyfiles):
                 if message["type"] == "message":
                     date = message["date"][0:10]
                     date = date.split("-")
+                    # print(date)
+                    # print(int(date[1])-1)
+                    # print(months[int(date[1])-1])
                     date[1] = months[int(date[1])-1]
                     year = date[0]
                     date[0] = date[2]

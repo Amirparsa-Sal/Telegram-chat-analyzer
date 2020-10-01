@@ -51,7 +51,8 @@ def find_date_number(date):
         'August': 31,
         'September': 30,
         'October': 31,
-        'November': 30
+        'November': 30,
+        'December':31,
     }
     date_number = 0
     for month, days in months.items():
