@@ -1,12 +1,15 @@
 from bs4 import BeautifulSoup
 import os
+import json
 from os import listdir
 from os.path import isfile, join
 import matplotlib.pyplot as plt
 from wordcloud_fa import WordCloudFa
 import re
 import codecs
-from utils import merge_sort
+from utils import merge_sort, find_date_number
+from word_cloud import delete_extra_characters, show_chat_word_cloud
+from stats import plot_chat_diagram
 import numpy as np
 from PIL import Image
 import functools
@@ -18,7 +21,7 @@ window.withdraw()
 DIRECTORY = filedialog.askdirectory()
 print(listdir(DIRECTORY))
 onlyfiles = [f for f in listdir(DIRECTORY) if (
-    isfile(join(DIRECTORY, f)) and f.split(".")[-1] == 'html')]
+    isfile(join(DIRECTORY, f)) and (f.split(".")[-1] == 'html' or f.split(".")[-1] == 'json'))]
 
 window.destroy()
 
@@ -26,31 +29,7 @@ if len(onlyfiles) == 0:
     print("There is no html file here!")
     exit(-1)
 
-def find_date_number(date):
-    day = int(date[0])
-    year = int(date[2]) 
-    months = {
-        'January': 31,
-        'February': 28 + int(year%4==0),
-        'March': 31,
-        'April': 30,
-        'May': 31,
-        'June': 30,
-        'July': 31,
-        'August': 31,
-        'September': 30,
-        'October': 31,
-        'November': 30
-    }
-    date_number = 0
-    for month, days in months.items():
-        if month == date[1]:
-            break
-        date_number += days
-    date_number += day + year * 365 + year//4
-    return date_number
-
-def show_chat_diagram():
+def get_chat_data_html(dir,onlyfiles):
     months = ['January','February','March','April','May','June','July','August','September','October','November']
     # finding messages
     last_date_number = 0
@@ -59,7 +38,7 @@ def show_chat_diagram():
     messages = []
     print("Scanning messages...")
     for file in onlyfiles:
-        soup = BeautifulSoup(open(os.path.join(DIRECTORY,file)), 'html.parser')
+        soup = BeautifulSoup(open(os.path.join(dir,file)), 'html.parser')
         divs = soup.find_all('div')
         for div in divs:
             if div['class'] == ['message', 'service']:
@@ -85,84 +64,80 @@ def show_chat_diagram():
     messages.append(message)
     dates = dates[1:]
     messages = messages[1:]
-    for date in range (min(dates)+1,max(dates)):
-        if date not in dates:
-            dates.append(date)
-            messages.append(0)
-    merge_sort(dates,0,len(dates)-1,messages)
-    dates = list(map(lambda date: date-dates[0],dates))
-    print("Almost done...")
-    for i in range(1,len(messages)):
-        messages[i] += messages[i-1]
-    plt.figure()
-    plt.plot(dates, messages, 'b')
-    plt.xlim(dates[0], dates[-1])
-    plt.xlabel("Day Number(Origin=First message)")
-    plt.ylabel("Total messages until that day")
-    plt.title(
-        f"Total messages: {messages[-1]}")
-    plt.savefig(os.path.join(DIRECTORY,'Diagram.png'))
-    plt.show()
-def delete_extra_characters(text):
-    weridPatterns = re.compile("["
-                               u"\U0001F600-\U0001F64F"  # emoticons
-                               u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-                               u"\U0001F680-\U0001F6FF"  # transport & map symbols
-                               u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-                               u"\U00002702-\U000027B0"
-                               u"\U000024C2-\U0001F251"
-                               u"\U0001f926-\U0001f937"
-                               u'\U00010000-\U0010ffff'
-                               u"\u200d"
-                               u"\u2640-\u2642"
-                               u"\u2600-\u2B55"
-                               u"\u23cf"
-                               u"\u23e9"
-                               u"\u231a"
-                               u"\u3030"
-                               u"\ufe0f"
-                               u"\u2069"
-                               u"\u2066"
-                               u"\u200c"
-                               u"\u2068"
-                               u"\u2067"
-                               "]+", flags=re.UNICODE)
-    return weridPatterns.sub(r'', text)
+    return (dates,messages)
 
-def show_chat_word_cloud():
-    print("Start storing chat data...")
-    save_chats()
-    print("Chat data stored...")
-    with codecs.open(os.path.join(DIRECTORY,'chats.txt'),'r',encoding='utf8') as file:
-        print("Start putting words in picture")
-        mask_array = np.array(Image.open("telegram.png"))
-        wordcloud = WordCloudFa(persian_normalize=True,mask=mask_array)
-        wordcloud.add_stop_words(['ama','ba','ta','ra','ro','az','dar','va','ke','be','mn','man','vali','ye','من','یه'])
-        text = delete_extra_characters(file.read())
-        wc = wordcloud.generate(text)
-        image = wc.to_image()
-        image.show()
-        image.save(os.path.join(DIRECTORY,'wordcloud.png'))
+def get_chat_data_json(dir,onlyfiles):
+    months = ['January','February','March','April','May','June','July','August','September','October','November']
+    # finding messages
+    last_date_number = 0
+    message_num = 0
+    dates = []
+    message_nums = []
+    print("Scanning messages...")
+    for file in onlyfiles:
+        with codecs.open(os.path.join(DIRECTORY,file),) as exp_file:
+            data = json.load(exp_file)
+            messages = data["messages"]
+            for message in messages:
+                if message["type"] == "message":
+                    date = message["date"][0:10]
+                    date = date.split("-")
+                    date[1] = months[int(date[1])-1]
+                    year = date[0]
+                    date[0] = date[2]
+                    date[2] = year
+                    #finding day_number
+                    date_number = find_date_number(date)
+                    if last_date_number != date_number:
+                        if last_date_number not in dates:
+                            dates.append(last_date_number)
+                            message_nums.append(message_num)
+                        else:
+                            index = dates.index(last_date_number)
+                            message_nums[index] += message_num
+                        message_num = 0
+                        last_date_number = date_number
+                message_num+=1
+    print("Sorting data...")
+    dates.append(last_date_number)
+    message_nums.append(message_num)
+    dates = dates[1:]
+    message_nums = message_nums[1:]
+    return (dates,message_nums)
 
-def save_chats():
-    with codecs.open(os.path.join(DIRECTORY,'chats.txt'),'w') as exp_file:
+def save_chats_html(dir):
+    with codecs.open(os.path.join(dir,'chats.txt'),'w') as exp_file:
         exp_file.write("")
-    with codecs.open(os.path.join(DIRECTORY,'chats.txt'),'a') as exp_file:
+    with codecs.open(os.path.join(dir,'chats.txt'),'a') as exp_file:
         for file in onlyfiles:
-            soup = BeautifulSoup(open(os.path.join(DIRECTORY,file)), 'html.parser')
+            soup = BeautifulSoup(open(os.path.join(dir,file)), 'html.parser')
             divs = soup.find_all('div')
             for div in divs:
                 if div['class'] == ['text']:
                     exp_file.write(div.text + "\n")
 
+
+print("Select a number\n1)html\n2)JSON")
+mode = int(input())
 print("Select a number\n1)Word Cloud\n2)Chat Diagram")
 n = int(input())
 if n==1:
     print("Start making word cloud...")
-    show_chat_word_cloud()
+    print("Start storing chat data...")
+    save_chats_html(DIRECTORY)
+    print("Chat data stored...")
+    show_chat_word_cloud(DIRECTORY)
     print("The word cloud is ready!")
 elif n==2:
     print("Start making diagram...")
-    show_chat_diagram()
+    dates = None
+    messages = None
+    if mode == 1:
+        dates,messages = get_chat_data_html(DIRECTORY,onlyfiles)
+    else:
+        dates,messages = get_chat_data_json(DIRECTORY,onlyfiles)
+    plot_chat_diagram(dates,messages,DIRECTORY)
     print("The diagram is ready!")
 exit(0)
+
+

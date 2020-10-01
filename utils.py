@@ -36,3 +36,28 @@ def merge_sort(arr, start, end, corresponding_arr=None):
 	merge_sort(arr,start,mid,corresponding_arr)
 	merge_sort(arr,mid+1,end,corresponding_arr)
 	merge(arr,start,mid,end,corresponding_arr)
+
+def find_date_number(date):
+    day = int(date[0])
+    year = int(date[2]) 
+    months = {
+        'January': 31,
+        'February': 28 + int(year%4==0),
+        'March': 31,
+        'April': 30,
+        'May': 31,
+        'June': 30,
+        'July': 31,
+        'August': 31,
+        'September': 30,
+        'October': 31,
+        'November': 30
+    }
+    date_number = 0
+    for month, days in months.items():
+        if month == date[1]:
+            break
+        date_number += days
+    date_number += day + year * 365 + year//4
+    return date_number
+
