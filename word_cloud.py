@@ -5,17 +5,21 @@ import numpy as np
 from PIL import Image
 import re
 
-def show_chat_word_cloud(dir):
-    with codecs.open(os.path.join(dir,'chats.txt'),'r',encoding='utf8') as file:
+def show_chat_word_cloud(directory):
+    with codecs.open(os.path.join(directory,'chats.txt'),'r',encoding='utf8') as file:
         print("Start putting words in picture")
         mask_array = np.array(Image.open("telegram.png"))
-        wordcloud = WordCloudFa(persian_normalize=True,mask=mask_array)
-        wordcloud.add_stop_words(['ama','ba','ta','ra','ro','az','dar','va','ke','be','mn','man','vali','ye','من','یه'])
+        wordcloud = WordCloudFa(persian_normalize=True,mask=mask_array,collocations=False)
+        stop_words = []
+        with codecs.open("stop_words.txt",'r',encoding='utf8') as words:
+          for word in words:
+            stop_words.append(word[:-2])
+        wordcloud.add_stop_words(stop_words)
         text = delete_extra_characters(file.read())
         wc = wordcloud.generate(text)
         image = wc.to_image()
         image.show()
-        image.save(os.path.join(dir,'wordcloud.png'))
+        image.save(os.path.join(directory,'wordcloud.png'))
 
 def delete_extra_characters(text):
     weridPatterns = re.compile("["

@@ -2,7 +2,7 @@ from utils import merge_sort
 import matplotlib.pyplot as plt
 import os 
 
-def plot_chat_diagram(dates,messages,dir="."):
+def plot_chat_diagram(dates,messages,directory="."):
     for date in range (min(dates)+1,max(dates)):
         if date not in dates:
             dates.append(date)
@@ -19,5 +19,5 @@ def plot_chat_diagram(dates,messages,dir="."):
     plt.ylabel("Total messages until that day")
     plt.title(
         f"Total messages: {messages[-1]}")
-    plt.savefig(os.path.join(dir,'Diagram.png'))
+    plt.savefig(os.path.join(directory,'Diagram.png'))
     plt.show()
