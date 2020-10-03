@@ -3,8 +3,8 @@ This is an script for analyzing telegram. It's current features are as follows:
 * Make your own **chat word cloud**
 * Get your chat **stats diagram**  
 <p float="left">  
-  <img src="https://user-images.githubusercontent.com/60196448/94978473-518ea400-052a-11eb-9eec-e8818f0a74c1.png" width="360" height="360" />  
-  <img src="https://user-images.githubusercontent.com/60196448/94978608-0aed7980-052b-11eb-8348-08b2ea390e97.png" width="533" />  
+  <img src="https://user-images.githubusercontent.com/60196448/94979067-9700a080-052d-11eb-90ab-c90d6b3060d2.png" alt="Word Cloud"/>  
+  <img src="https://user-images.githubusercontent.com/60196448/94979068-98ca6400-052d-11eb-8277-a97a3b063935.png alt="Diagram"/>  
 </p>  
 
 # How to use
