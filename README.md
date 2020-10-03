@@ -4,7 +4,7 @@ This is an script for analyzing telegram. It's current features are as follows:
 * Get your chat **stats diagram**  
 <p float="left">  
   <img src="https://user-images.githubusercontent.com/60196448/94979067-9700a080-052d-11eb-90ab-c90d6b3060d2.png" alt="Word Cloud"/>  
-  <img src="https://user-images.githubusercontent.com/60196448/94979068-98ca6400-052d-11eb-8277-a97a3b063935.png alt="Diagram"/>  
+  <img src="https://user-images.githubusercontent.com/60196448/94979068-98ca6400-052d-11eb-8277-a97a3b063935.png" alt="Diagram"/>  
 </p>  
 
 # How to use
